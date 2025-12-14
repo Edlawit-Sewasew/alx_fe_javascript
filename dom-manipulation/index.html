@@ -324,6 +324,169 @@
                 flex-direction: column;
             }
         }
+        /* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin: 5px;
+}
+
+.btn-small:hover {
+    background: #e0e0e0;
+}
+
+/* Status Messages */
+.status-message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    display: none;
+}
+
+.status-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    display: block;
+}
+
+.status-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: block;
+}
+
+/* Backup Section */
+.backup-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #28a745;
+}
+
+.backup-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.storage-info {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.storage-info p {
+    margin: 5px 0;
+    color: #666;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #333;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1001;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success {
+    background: #28a745;
+}
+
+.toast.error {
+    background: #dc3545;
+}
+
+.toast.info {
+    background: #17a2b8;
+}
+
+/* Storage Indicator */
+.storage-indicator {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.9);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    color: #666;
+    z-index: 999;
+}
     </style>
 </head>
 <body>
@@ -381,6 +544,54 @@
         </div>
     </div>
 
+<!-- Add these controls in the .control-buttons div after existing buttons -->
+<div class="control-buttons">
+    <!-- Existing buttons -->
+    <button id="newQuote">Show New Quote</button>
+    <button id="toggleFormBtn">Add New Quote</button>
+    
+    <!-- NEW: Export/Import buttons -->
+    <button id="exportBtn">Export Quotes</button>
+    <button id="importBtn">Import Quotes</button>
+    
+    <!-- NEW: Clear storage button -->
+    <button id="clearStorageBtn">Clear Storage</button>
+</div>
+
+<!-- Add this modal for import functionality -->
+<div id="importModal" class="modal">
+    <div class="modal-content">
+        <h3>Import Quotes from JSON File</h3>
+        <div class="form-group">
+            <input type="file" id="importFile" accept=".json" />
+        </div>
+        <div class="modal-actions">
+            <button id="importConfirmBtn" class="btn-primary">Import</button>
+            <button id="importCancelBtn" class="btn-secondary">Cancel</button>
+        </div>
+        <div id="importStatus" class="status-message"></div>
+    </div>
+</div>
+
+<!-- Add this backup/restore section in the add-quote-section -->
+<div class="backup-section">
+    <h4>Backup & Restore</h4>
+    <div class="backup-controls">
+        <button id="exportJsonBtn" class="btn-small">Export as JSON</button>
+        <button id="importJsonBtn" class="btn-small">Import from JSON</button>
+        <button id="backupNowBtn" class="btn-small">Backup Now</button>
+    </div>
+    <div class="storage-info">
+        <p>Last Backup: <span id="lastBackupTime">Never</span></p>
+        <p>Storage Used: <span id="storageUsed">0 KB</span></p>
+    </div>
+</div>
+
+<!-- Add this to the stats section -->
+<div class="stat-item">
+    <div class="stat-value" id="storageStat">0</div>
+    <div class="stat-label">Local Storage</div>
+</div>
     <script src="script.js"></script>
 </body>
 </html>
