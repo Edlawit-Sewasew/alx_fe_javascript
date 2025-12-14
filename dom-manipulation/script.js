@@ -223,4 +223,52 @@ function setupEventListeners() {
         addQuoteSection.classList.toggle('active')
     );
     quoteForm.addEventListener('submit', addQuote);
+    document
+    .getElementById('importQuotesInput')
+    .addEventListener('change', importFromJsonFile);
+
+}
+function exportToJsonFile() {
+    const dataStr = JSON.stringify({ quotes, quoteIdCounter }, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'quotes-backup.json';
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+function importFromJsonFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        try {
+            const parsed = JSON.parse(e.target.result);
+
+            if (!Array.isArray(parsed.quotes)) {
+                alert('Invalid JSON format');
+                return;
+            }
+
+            quotes = parsed.quotes;
+            quoteIdCounter = parsed.quoteIdCounter || quotes.length + 1;
+
+            saveQuotesToStorage();
+            generateCategoryButtons();
+            updateStatistics();
+            showRandomQuote();
+
+            alert('Quotes imported successfully!');
+        } catch (err) {
+            alert('Error importing file');
+        }
+    };
+
+    reader.readAsText(file);
 }
