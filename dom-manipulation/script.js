@@ -272,3 +272,96 @@ function importFromJsonFile(event) {
 
     reader.readAsText(file);
 }
+function populateCategories() {
+    const categoryFilter = document.getElementById('categoryFilter');
+
+    // Clear existing options except "All"
+    categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+
+    // Extract unique categories
+    const categories = [...new Set(quotes.map(q => q.category))];
+
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categoryFilter.appendChild(option);
+    });
+
+    // Restore last selected category
+    const savedCategory = localStorage.getItem('selectedCategory');
+    if (savedCategory) {
+        categoryFilter.value = savedCategory;
+    }
+}
+function filterQuotes() {
+    const selectedCategory = document.getElementById('categoryFilter').value;
+
+    // Save selected filter
+    localStorage.setItem('selectedCategory', selectedCategory);
+
+    const filteredQuotes =
+        selectedCategory === 'all'
+            ? quotes
+            : quotes.filter(q => q.category === selectedCategory);
+
+    displayFilteredQuotes(filteredQuotes);
+}
+function displayFilteredQuotes(filteredQuotes) {
+    quoteDisplay.innerHTML = '';
+
+    if (filteredQuotes.length === 0) {
+        quoteDisplay.textContent = 'No quotes available for this category.';
+        return;
+    }
+
+    filteredQuotes.forEach(quote => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <p>"${quote.text}"</p>
+            <small>— ${quote.author}</small>
+        `;
+        quoteDisplay.appendChild(div);
+    });
+}
+function addQuote(e) {
+    e.preventDefault();
+
+    const text = document.getElementById('newQuoteText').value.trim();
+    const category = document.getElementById('newQuoteCategory').value.trim();
+    const author = document.getElementById('authorInput').value.trim() || 'Anonymous';
+
+    if (!text || !category) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    const newQuote = {
+        id: quoteIdCounter++,
+        text,
+        category,
+        author
+    };
+
+    quotes.push(newQuote);
+
+    // Save updated quotes
+    localStorage.setItem('quotes', JSON.stringify(quotes));
+
+    // Update categories dynamically
+    populateCategories();
+
+    // Reapply current filter
+    filterQuotes();
+
+    quoteForm.reset();
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const storedQuotes = localStorage.getItem('quotes');
+    if (storedQuotes) {
+        quotes = JSON.parse(storedQuotes);
+    }
+
+    populateCategories();
+    filterQuotes();
+});
