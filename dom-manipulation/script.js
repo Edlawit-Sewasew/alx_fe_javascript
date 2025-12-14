@@ -365,3 +365,108 @@ document.addEventListener('DOMContentLoaded', () => {
     populateCategories();
     filterQuotes();
 });
+async function fetchServerQuotes() {
+    try {
+        const response = await fetch(SERVER_URL);
+        const data = await response.json();
+
+        // Simulate server quotes format
+        const serverQuotes = data.map(item => ({
+            id: item.id,
+            text: item.title,
+            category: item.body.split('|')[0] || 'General', // Simulate category
+            author: item.body.split('|')[1] || 'Server'
+        }));
+
+        return serverQuotes;
+    } catch (error) {
+        console.error('Error fetching server quotes:', error);
+        return [];
+    }
+}
+async function syncWithServer() {
+    const serverQuotes = await fetchServerQuotes();
+
+    if (serverQuotes.length === 0) return;
+
+    let conflictsResolved = false;
+
+    // Merge server data into local quotes
+    serverQuotes.forEach(serverQuote => {
+        const localIndex = quotes.findIndex(q => q.id === serverQuote.id);
+
+        if (localIndex === -1) {
+            // New quote from server, add it
+            quotes.push(serverQuote);
+            conflictsResolved = true;
+        } else {
+            // Conflict detected (same id, different content)
+            const localQuote = quotes[localIndex];
+            if (localQuote.text !== serverQuote.text || localQuote.category !== serverQuote.category) {
+                // Server takes precedence
+                quotes[localIndex] = serverQuote;
+                conflictsResolved = true;
+            }
+        }
+    });
+
+    if (conflictsResolved) {
+        saveQuotesToStorage();
+        populateCategories();
+        filterQuotes();
+        showNotification('Quotes updated from server with conflicts resolved.');
+    }
+}
+// Sync every 60 seconds
+setInterval(syncWithServer, 60000);
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.background = '#4CAF50';
+    notification.style.color = 'white';
+    notification.style.padding = '12px 20px';
+    notification.style.borderRadius = '8px';
+    notification.style.zIndex = '1000';
+    notification.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.5s';
+
+    document.body.appendChild(notification);
+    setTimeout(() => notification.style.opacity = '1', 10);
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(notification), 500);
+    }, 4000);
+}
+function manualResolveConflict(localQuote, serverQuote) {
+    // Example: Ask user which version to keep
+    const userChoice = confirm(
+        `Conflict detected for quote ID ${localQuote.id}.\n` +
+        `Local: "${localQuote.text}"\nServer: "${serverQuote.text}"\n\nKeep server version?`
+    );
+
+    if (userChoice) {
+        const index = quotes.findIndex(q => q.id === localQuote.id);
+        quotes[index] = serverQuote;
+        saveQuotesToStorage();
+        populateCategories();
+        filterQuotes();
+        showNotification('Conflict resolved: server version kept.');
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    loadQuotesFromStorage();
+    loadSessionPreferences();
+    populateCategories();
+    filterQuotes();
+
+    // Initial server sync
+    syncWithServer();
+
+    // Periodic sync every 60 seconds
+    setInterval(syncWithServer, 60000);
+});
